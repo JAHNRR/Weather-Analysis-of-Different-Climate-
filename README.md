@@ -1,1 +1,1 @@
-Im Jahnavi Rathod, <br> <u>owner</u>
+Im Jahnavi Rathod, <br> owner
