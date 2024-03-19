@@ -1,0 +1,295 @@
+#include <stdio.h>
+#include <math.h>
+#define SIZE 100
+#define MON 30
+enum stat{urban,rural};
+struct urb_param
+{
+  int status;
+  float sky_vf;
+  float veg_dens;
+  int popl_dens;
+  float perv_sf;
+  float imperv_sf;
+  float dist[SIZE];
+};
+
+struct weath_param
+{
+  float temperature;
+  float rel_humid;
+};
+
+typedef struct station
+{
+  int stat_number;
+  struct urb_param up;
+  struct weath_param wp[MON];
+} station;
+
+float maxtemp (station s)
+{
+  float maxtemp=0;
+  for (int i=0; i<MON ; i++)
+  {
+   if(s.wp[i].temperature > maxtemp)
+    {
+     maxtemp =s.wp[i].temperature;
+    }
+  }
+  return maxtemp;  
+}
+
+float avg_temp( station s)
+{
+  float ans = 0;
+  for( int i = 0; i < MON; i++)
+  {
+    ans = ans + s.wp[i].temperature;
+  }
+  return ans/MON;
+}
+
+int nearest_rural( station urb, station s[], int n)
+{
+    int min_rural = -1;
+    int flag = 0;
+    for( int i = 0; i < n && flag == 0; i++)
+    {
+        if(s[i].up.status == 1) 
+        {
+            min_rural = i;
+            for(int j = i+1; j < n; j++)
+            {
+                if(s[j].up.status == 1)
+                {
+                    if(urb.up.dist[j] < urb.up.dist[ min_rural]) min_rural = j;
+                    else if(urb.up.dist[j] == urb.up.dist[ min_rural])
+                    {
+                        if( s[i].up.perv_sf > s[min_rural].up.perv_sf ) min_rural = j;
+                    }
+                }
+            }
+            flag = 1;
+        }
+        return min_rural;
+    }
+}
+
+void Query1( station s[],int n, float avg_city_temp)
+{
+  int HDDcount[n];
+  int max,i,j,count;
+  max=0;
+  for (i=0; i<n; i++)
+  {
+   count=0;
+   for (j=0; j<MON; j++)
+    {
+     if(s[i].wp[j].temperature > avg_city_temp)
+       count++;
+    }
+  HDDcount[i]=count;
+  if (count>max)
+    max=count;
+  }
+ for(i=0;i<n; i++)
+ {
+  if(HDDcount[i]==max)
+    printf("station no with highest heat deg days is:%d\n", i+1);
+ }
+}
+
+void Query2( station urb, station s[], int n)
+{  
+    if(nearest_rural( urb, s, n) != -1)
+    {
+        int min_rural = nearest_rural( urb, s, n);
+        float temp_diff[MON];
+        temp_diff[0] = fabs((urb.wp[0].temperature - s[min_rural].wp[0].temperature));
+        float min_temp_diff = fabs(urb.wp[0].temperature - s[min_rural].wp[0].temperature);
+        for( int i = 1; i < MON ; i++)
+        {
+            temp_diff[i] = fabs(urb.wp[i].temperature - s[min_rural].wp[i].temperature);
+            if( min_temp_diff > temp_diff[i]) min_temp_diff = temp_diff[i];
+        }
+        for( int i = 0; i < MON; i++)
+        {
+            if( temp_diff[i] == min_temp_diff) printf("day %d", i+1);
+        }  
+    }
+    else printf("No rural station");
+}
+
+void Query3 ( station s[],int n, float avg_city_temp)
+{
+    int i,j,k,loc;
+
+    station temp, s_temp[n];
+    for(int i = 0; i < n; i++)
+    {
+        s_temp[i] = s[i];
+    }
+
+    for (i=0; i<=n-1;i++)
+    {
+        loc=i;
+        for (j=i+1; j<n; j++)
+        {
+            if( s_temp[j].up.veg_dens>s_temp[loc].up.veg_dens )
+            {
+                loc=j;
+            }
+        }
+        temp= s_temp[loc];
+        s_temp[loc]= s_temp[i];
+        s_temp[i]=temp;
+        printf("station no %d\n", s_temp[i].stat_number );
+        for (k=0; k<MON; k++)
+        {
+            if (s_temp[i].wp[k].temperature > avg_city_temp )
+            printf("day %d\n", k+1);
+        }
+    }
+}    
+
+void Query4 (station s[], int n , int k)
+{
+    int i, j, loc;
+  station temp, s_temp[n];
+    for(int i = 0; i < n; i++)
+    {
+        s_temp[i] = s[i];
+    }
+  float MT;
+    for (i=0; i<k; i++)
+   {
+        loc=i;
+        MT= maxtemp(s_temp[i]);
+        for (j=i+1; j<n; j++)
+        {
+            if (s_temp[j].up.popl_dens == s_temp[loc].up.popl_dens && (maxtemp(s_temp[j]) >MT) )
+            {
+                loc=j;
+                MT=maxtemp(s_temp[j]);
+            } 
+            else if (s_temp[j].up.popl_dens < s_temp[loc].up.popl_dens)
+            {
+                loc=j;
+            }     
+        }
+        temp=s_temp[loc];
+        s_temp[loc]=s_temp[i];
+        s_temp[i]=temp;
+    }    
+    for (i=0;i<k; i++)
+    {
+        printf("station no:%d, population density: %d, max temp: %f\n",s_temp[i].stat_number, s_temp[i].up.popl_dens, maxtemp(s_temp[i])  );
+    }
+}
+
+void Query5( station s[], int n)
+{
+    for( int i = 0; i < n; i++)
+    {
+        if( !s[i].up.status)
+        {
+            if(nearest_rural( s[i], s, n) != -1)
+            {
+                int nearby_rural = nearest_rural( s[i], s, n);
+                float heat_island = avg_temp( s[i] ) - avg_temp(s[nearby_rural]);
+                printf("The heat island intensity for station %d is %f\n", s[i].stat_number, heat_island);
+            }
+        }
+    }
+}
+  
+void main()
+{
+    int n = 5;
+    station s[n];
+    float temp_sum=0;
+    FILE *file = fopen("input.csv", "r");
+    for(int i = 0; i < n; i++)
+    {
+        s[i].stat_number = i+1;
+        fscanf(file,"%d\n",&s[i].up.status);
+        fscanf(file,"%f\n",&s[i].up.sky_vf);
+        fscanf(file,"%f\n",&s[i].up.veg_dens);
+        fscanf(file,"%d\n",&s[i].up.popl_dens);
+        fscanf(file,"%f\n",&s[i].up.perv_sf);
+        fscanf(file,"%f\n",&s[i].up.imperv_sf);
+        for(int j = 0; j < n; j++)
+        {
+            if( j > i)
+            {
+                fscanf( file,"%f\n",&s[i].up.dist[j]);
+            }
+            else if( j < i)
+            {
+                s[i].up.dist[j] = s[j].up.dist[i];
+            }
+            else
+            {
+                s[i].up.dist[j] = 0;
+            }
+        }
+        for( int k = 0; k < MON; k++)
+        {
+            fscanf( file,"%f\n",&s[i].wp[k].temperature);
+            temp_sum = temp_sum + s[i].wp[k].temperature;
+            fscanf( file,"%f\n", &s[i].wp[k].rel_humid);
+        }
+    }
+    float avg_city_temp = temp_sum/(n*MON);
+    int m;
+    do
+    {
+        printf("\n");
+        printf("---------------------------------------------------------\n");
+        printf("1.List of stations with highest no. of heat degree days\n");
+        printf("2.Thermally comfortable days of selected station\n");
+        printf("3.Dates for all station with decreasing vegetation density and for which temperature was more than average city temperature\n");
+        printf("4. Top k stations with minimum population density\n");
+        printf("5. Heat Island Intensity for all urban station\n");
+        printf("6. Exit\n");
+        printf("---------------------------------------------------------\n\n");
+        printf("Choose your query:");
+        scanf("%d", &m);  
+        if( m == 1) 
+        {
+            Query1( s,n,avg_city_temp);
+        }
+        else if( m == 2)
+        {
+            int station_no;
+            do
+            {
+                printf("Input station number for thermally comfortable days:");
+                scanf("%d",&station_no);
+                if(s[(station_no)-1].up.status != urban) printf("Input invalid\n");
+            }while( s[(station_no)-1].up.status != urban );
+            Query2( s[(station_no) - 1], s, n);
+        }
+        else if( m == 3)
+        {
+            Query3( s, n, avg_city_temp);
+        }
+        else if( m == 4)
+        {
+            int k;
+            do
+            {
+                printf("Enter value of k:");
+                scanf("%d",&k);
+                if( k > n) printf("Input invalid\n");
+            }while(k > n);
+            Query4( s, n, k);
+        }
+        else if( m == 5)
+        {
+            Query5( s, n);
+        }
+        else if(m > 6 || m < 1)printf("Invalid Input");
+    }while(m != 6);
+}
