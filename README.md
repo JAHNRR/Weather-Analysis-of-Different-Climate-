@@ -40,3 +40,98 @@ Top k stations with minimum population density
 Heat Island Intensity for all urban stations
 
 5.Calculates the heat island intensity for all urban stations, which is the difference between the average temperature of the urban station and its nearest rural station.
+
+ Structure Definitions:
+Two structures are defined:
+urb_param: Represents urban parameters of a climate station, including sky view factor, vegetation density ratio, population density, pervious surface fraction, impervious surface fraction, station status (urban or rural), and distance to other stations.
+weath_param: Represents weather parameters of a station for a single day, including air temperature and relative humidity.
+
+ Function Definitions:
+float maxtemp (station s): Finds the maximum temperature recorded for a given station.
+float avg_temp( station s): Calculates the average temperature recorded for a given station.
+int nearest_rural( station urb, station s[], int n): Finds the index of the nearest rural station for a given urban station among an array of stations.
+void Query1( station s[],int n, float avg_city_temp): Lists stations with the highest number of heat degree days.
+void Query2( station urb, station s[], int n): Finds thermally comfortable days for a selected urban station.
+void Query3 ( station s[],int n, float avg_city_temp): Lists dates for all stations with decreasing vegetation density ratio and temperatures higher than the average city temperature.
+void Query4 (station s[], int n , int k): Lists the top 'k' stations with minimum population density and highest maximum temperature.
+void Query5( station s[], int n): Calculates and prints the heat island intensity for all urban stations.
+
+Query 1: List of stations with highest number of heat degree days
+Algorithm:
+
+Iterate through each station.
+For each station, count the number of days where the temperature is higher than the average city temperature.
+Maintain a variable to keep track of the maximum count of heat degree days.
+Output the stations with the highest count of heat degree days.
+Optimization:
+
+Instead of recalculating the number of heat degree days for each station, we can compute it while reading the input data from the file. This optimization reduces the need for repeated iteration through the weather data.
+Time Complexity:
+
+Let's denote the number of stations as n and the number of days as m (30 in this case).
+The time complexity of this algorithm is O(n * m), as we need to iterate through all stations and check each day's temperature.
+Query 2: Thermally comfortable days of selected station
+Algorithm:
+
+Find the nearest rural station for the selected urban station.
+Calculate the temperature difference between the urban station and its nearest rural station for each day.
+Find the minimum temperature difference.
+Output the days where the temperature difference is equal to the minimum temperature difference.
+Optimization:
+
+The algorithm finds the nearest rural station twice. It can be optimized by finding it once and storing the result to avoid redundancy.
+Time Complexity:
+
+Finding the nearest rural station takes O(n) time, where n is the number of stations.
+Calculating the temperature difference for each day takes O(m) time.
+Thus, the overall time complexity is O(n + m).
+Query 3: Dates for all stations with decreasing vegetation density and temperature higher than average city temperature
+Algorithm:
+
+Sort the stations based on decreasing vegetation density.
+For each station, check if the temperature is higher than the average city temperature.
+Output the station number and dates where the condition is met.
+Optimization:
+
+Sort the stations based on decreasing vegetation density only once before processing.
+Use a flag to avoid redundant checks for temperature conditions if vegetation density is not decreasing.
+Time Complexity:
+
+Sorting the stations takes O(n log n) time.
+Checking temperature conditions for each station takes O(n * m) time.
+Thus, the overall time complexity is O(n log n + n * m).
+Query 4: Top k stations with minimum population density and highest maximum temperature
+Algorithm:
+
+Sort the stations based on population density in ascending order.
+If two stations have the same population density, sort them based on highest maximum temperature.
+Output the top k stations after sorting.
+Optimization:
+
+Sort the stations based on both population density and maximum temperature in a single pass of sorting.
+Use a custom comparison function to handle the sorting criteria.
+Time Complexity:
+
+Sorting the stations based on two criteria takes O(n log n) time.
+Outputting the top k stations takes O(k) time.
+Thus, the overall time complexity is O(n log n).
+Query 5: Heat Island Intensity for all urban stations
+Algorithm:
+
+For each urban station, find its nearest rural station.
+Calculate the average temperature difference between each urban station and its nearest rural station.
+Output the heat island intensity for each urban station.
+Optimization:
+
+Compute the heat island intensity while finding the nearest rural station and store the results.
+Time Complexity:
+
+Finding the nearest rural station for each urban station takes O(n) time.
+Calculating the heat island intensity for each urban station takes O(n * m) time.
+Thus, the overall time complexity is O(n + n * m).
+
+Overall Analysis:
+The complexity of the algorithms depends on the number of stations (n) and the number of days (m).
+Optimizations can be applied to reduce redundancy and improve efficiency in some queries.
+Overall, the time complexity ranges from O(n) to O(n log n) depending on the specific query and optimization applied.
+
